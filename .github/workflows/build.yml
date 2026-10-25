@@ -302,6 +302,7 @@ jobs:
           persist-credentials: false
 
       - name: Check human authorship
+        if: github.repository == 'Droid-Deck/DroidDeck'
         env:
           EVENT_NAME: ${{ github.event_name }}
           BEFORE: ${{ github.event.before }}
@@ -531,6 +532,8 @@ jobs:
         env:
           DROIDDECK_BUILD_LABEL: ${{ steps.build-label.outputs.label }}
           SGDB_API_KEY: ${{ secrets.SGDB_API_KEY }}
+          DROIDDECK_APP_ID_SUFFIX: .fold
+          DROIDDECK_APP_LABEL: DroidDeck Fold
         run: |
           set -o pipefail
           python3 tools/powervr/fetch.py
