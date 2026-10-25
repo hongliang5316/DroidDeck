@@ -3,7 +3,7 @@ run-name: ${{ github.event_name == 'pull_request' && format('building pr {0} on 
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, build/fold6 ]
     paths-ignore:
       - '**/*.md'
       - 'LICENSE'
