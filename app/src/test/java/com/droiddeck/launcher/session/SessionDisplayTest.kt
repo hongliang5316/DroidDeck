@@ -34,6 +34,41 @@ class SessionDisplayTest {
         assertEquals(2560 to 1440, SessionDisplay.resolveChoice(2560 to 1440, SessionDisplay.MATCH_SCREEN))
     }
 
+    @Test fun halfScreenKeepsThePanelShapeAtHalfEachSide() {
+        assertEquals(1252 to 1156, SessionDisplay.resolveChoice(2504 to 2312, SessionDisplay.HALF_SCREEN))
+        assertEquals(1252 to 1156, SessionDisplay.resolveChoice(2312 to 2504, SessionDisplay.HALF_SCREEN))
+        assertEquals(1104 to 920, SessionDisplay.resolveChoice(2208 to 1840, SessionDisplay.HALF_SCREEN))
+        assertEquals(1264 to 560, SessionDisplay.resolveChoice(2528 to 1120, SessionDisplay.HALF_SCREEN))
+        assertEquals(1400 to 876, SessionDisplay.resolveChoice(2800 to 1752, SessionDisplay.HALF_SCREEN))
+    }
+
+    @Test fun halfScreenIsListedOnPanelsNarrowerThanSixteenByNine() {
+        val all = listOf("720p", "900p", "1080p", SessionDisplay.HALF_SCREEN, SessionDisplay.MATCH_SCREEN, SessionDisplay.FOLLOW_SCREEN)
+        assertEquals(all, SessionDisplay.resolutionOptions(2504 to 2312))
+        assertEquals(all, SessionDisplay.resolutionOptions(2312 to 2504))
+        assertEquals(all, SessionDisplay.resolutionOptions(2208 to 1840))
+        assertEquals(all, SessionDisplay.resolutionOptions(1440 to 1080))
+        assertTrue(SessionDisplay.HALF_SCREEN in SessionDisplay.resolutionOptions(1280 to 960))
+        assertFalse(SessionDisplay.HALF_SCREEN in SessionDisplay.resolutionOptions(1200 to 900))
+        assertFalse(SessionDisplay.HALF_SCREEN in SessionDisplay.resolutionOptions(2528 to 1120))
+        assertFalse(SessionDisplay.HALF_SCREEN in SessionDisplay.resolutionOptions(1920 to 1080))
+        assertFalse(SessionDisplay.HALF_SCREEN in SessionDisplay.resolutionOptions(2400 to 1080))
+    }
+
+    @Test fun halfScreenStaysListedWhileChosenOnAWidePanel() {
+        assertEquals(listOf("720p", "900p", "1080p", SessionDisplay.HALF_SCREEN, SessionDisplay.MATCH_SCREEN, SessionDisplay.FOLLOW_SCREEN),
+            SessionDisplay.resolutionOptions(2528 to 1120, SessionDisplay.HALF_SCREEN))
+        assertEquals(listOf("720p", "900p", SessionDisplay.MATCH_SCREEN, SessionDisplay.FOLLOW_SCREEN),
+            SessionDisplay.resolutionOptions(2400 to 1080, "720p"))
+    }
+
+    @Test fun namedChoicesResolveAgainstThePanelAndSizesDoNot() {
+        for (choice in listOf(SessionDisplay.MATCH_SCREEN, SessionDisplay.FOLLOW_SCREEN, SessionDisplay.HALF_SCREEN, "720p", "1080p"))
+            assertTrue(choice, SessionDisplay.relativeToPanel(choice))
+        assertFalse(SessionDisplay.relativeToPanel("1252x1156"))
+        assertFalse(SessionDisplay.relativeToPanel("custom"))
+    }
+
     @Test fun unfoldedControlsKeepTheGameSixteenByNineAcrossTheWidth() {
         assertEquals(1376, SessionDisplay.unfoldedGameHeight(2448, 1848))
         assertEquals(1038, SessionDisplay.unfoldedGameHeight(1848, 2448))
