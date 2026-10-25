@@ -53,6 +53,14 @@ class SessionScalingPrefsTest {
         assertEquals("steam", SessionPrefs.displayMode(context, "steam", script))
     }
 
+    @Test fun halfScreenIsSavedAsAChoiceThatFollowsThePanel() {
+        val context = RuntimeEnvironment.getApplication()
+        SessionPrefs.setResolutionChoice(context, "steam", SessionDisplay.HALF_SCREEN)
+        assertEquals(SessionDisplay.HALF_SCREEN, SessionPrefs.resolutionChoice(context, "steam", 2504 to 2312))
+        assertEquals(SessionDisplay.HALF_SCREEN, SessionPrefs.resolutionChoice(context, "steam", 2528 to 1120))
+        assertEquals(SessionDisplay.DEFAULT_RESOLUTION, SessionPrefs.resolutionChoice(context, "lxqt", 2504 to 2312))
+    }
+
     @Test fun freshSettingsUseTheConcreteDefaultAndCustomSizesAreNormalized() {
         val context = RuntimeEnvironment.getApplication()
         assertEquals(SessionDisplay.DEFAULT_RESOLUTION, SessionPrefs.resolutionChoice(context, "steam", 2400 to 1080))

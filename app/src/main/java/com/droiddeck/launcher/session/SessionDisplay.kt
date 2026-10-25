@@ -7,6 +7,7 @@ object SessionDisplay {
     const val MATCH_SCREEN = "screen"
     const val FOLLOW_SCREEN = "follow"
     const val FOLLOW_MIN_SIDE = 480
+    const val HALF_SCREEN = "half"
 
     const val DEFAULT_RESOLUTION = "720p"
     private val PRESET_HEIGHTS = listOf(720, 900, 1080)
@@ -14,21 +15,39 @@ object SessionDisplay {
     fun presetHeight(choice: String): Int? =
         if (choice.endsWith("p")) choice.dropLast(1).toIntOrNull()?.takeIf { it > 0 } else null
 
+    fun relativeToPanel(choice: String): Boolean =
+        choice == MATCH_SCREEN || choice == FOLLOW_SCREEN || choice == HALF_SCREEN || presetHeight(choice) != null
+
     fun screenSize(panel: Pair<Int, Int>): Pair<Int, Int> =
         (maxOf(panel.first, panel.second) and 1.inv()) to (minOf(panel.first, panel.second) and 1.inv())
 
+    fun halfScreenSize(panel: Pair<Int, Int>): Pair<Int, Int> {
+        val (width, height) = screenSize(panel)
+        return ((width / 2) and 1.inv()) to ((height / 2) and 1.inv())
+    }
+
+    fun offersHalfScreen(panel: Pair<Int, Int>): Boolean {
+        val (width, height) = screenSize(panel)
+        return width * 9 < height * 16 && halfScreenSize(panel).second >= FOLLOW_MIN_SIDE
+    }
+
     fun resolveChoice(panel: Pair<Int, Int>, choice: String): Pair<Int, Int> {
         if (choice == MATCH_SCREEN || choice == FOLLOW_SCREEN) return screenSize(panel)
+        if (choice == HALF_SCREEN) return halfScreenSize(panel)
         presetHeight(choice)?.let { return resolve(panel, it, SessionPrefs.SHAPE_AUTO) }
         val parts = choice.split('x').map { it.toIntOrNull() }
         return if (parts.size == 2 && parts.all { it != null && it > 0 }) parts[0]!! to parts[1]!!
         else resolve(panel, 720, SessionPrefs.SHAPE_AUTO)
     }
 
-    fun resolutionOptions(panel: Pair<Int, Int>): List<String> {
+    // Height presets come out 16:9 on panels narrower than that; half screen keeps the panel's
+    // shape and scales up by exactly two. It stays listed while chosen, e.g. on a folded cover screen.
+    fun resolutionOptions(panel: Pair<Int, Int>, selected: String? = null): List<String> {
         val panelHeight = minOf(panel.first, panel.second)
-        return PRESET_HEIGHTS.filter { it <= panelHeight }.map { "${it}p" }
-            .filter { resolveChoice(panel, it) != screenSize(panel) } + MATCH_SCREEN + FOLLOW_SCREEN
+        val presets = PRESET_HEIGHTS.filter { it <= panelHeight }.map { "${it}p" }
+            .filter { resolveChoice(panel, it) != screenSize(panel) }
+        val half = if (selected == HALF_SCREEN || offersHalfScreen(panel)) listOf(HALF_SCREEN) else emptyList()
+        return presets + half + MATCH_SCREEN + FOLLOW_SCREEN
     }
 
     fun followSize(width: Int, height: Int): Pair<Int, Int>? =
